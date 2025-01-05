@@ -8,8 +8,14 @@ const loggers = require('./logging.js');
 const logger = loggers.logger;
 const app = express();
 
-// Configuração para servir arquivos estáticos
 app.use('/images', express.static('images'));
+app.use(express.json());
+
+const actions = {
+  walkForward: false,
+  circle: false,
+  jump: false,
+};
 
 const messages = {
   button1: 'Mensagem do botão 1!',
@@ -62,24 +68,24 @@ app.get('/', (req, res) => {
           height: 100px;
           background: linear-gradient(135deg, #32a852, #1e90ff);
           border: none;
-          border-radius: 10px;
+          border-radius: 50%;
           cursor: pointer;
           overflow: hidden;
           box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
           transition: transform 0.2s ease, background-color 0.3s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
         button:hover {
           transform: translateY(-5px);
           background: linear-gradient(135deg, #1e90ff, #32a852);
         }
         button img {
-          width: 100%;
-          height: 100%;
+          width: 70%;
+          height: 70%;
           object-fit: cover;
-          opacity: 0.8;
-        }
-        button:hover img {
-          opacity: 1;
+          border-radius: 50%;
         }
         .selectors {
           margin: 20px 0;
@@ -99,6 +105,8 @@ app.get('/', (req, res) => {
         #sendButton {
           padding: 10px 20px;
           background: #1e90ff;
+          width: 100px;
+          height: 40px;
           color: white;
           border: none;
           border-radius: 5px;
@@ -117,6 +125,43 @@ app.get('/', (req, res) => {
         }
         footer a:hover {
           text-decoration: underline;
+        }
+        .actionButton {
+          position: relative;
+          display: inline-block;
+          width: 60px;
+          height: 34px;
+        }
+        .actionButton input {
+          display: none;
+        }
+        .slider {
+          position: absolute;
+          cursor: pointer;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: #ccc;
+          transition: .4s;
+          border-radius: 34px;
+        }
+        .slider:before {
+          position: absolute;
+          content: "";
+          height: 26px;
+          width: 26px;
+          left: 4px;
+          bottom: 4px;
+          background-color: white;
+          transition: .4s;
+          border-radius: 50%;
+        }
+        input:checked + .slider {
+          background-color: #4CAF50;
+        }
+        input:checked + .slider:before {
+          transform: translateX(26px);
         }
       </style>
     </head>
@@ -145,6 +190,22 @@ app.get('/', (req, res) => {
             <img src="/images/imagem6.png" alt="Imagem 6">
           </button>
         </div>
+
+        <div>
+          <label class="actionButton">
+            <input type="checkbox" id="walkForward" onclick="toggleAction('walkForward')">
+            <span class="slider"></span>
+          </label>
+          <label class="actionButton">
+            <input type="checkbox" id="circle" onclick="toggleAction('circle')">
+            <span class="slider"></span>
+          </label>
+          <label class="actionButton">
+            <input type="checkbox" id="jump" onclick="toggleAction('jump')">
+            <span class="slider"></span>
+          </label>
+        </div>
+
         <div class="selectors">
           <label for="fromPerson">Pessoa de Origem:</label>
           <select id="fromPerson">
@@ -166,7 +227,19 @@ app.get('/', (req, res) => {
           <p>Créditos à: <a href="https://youtube.com/@H2N_OFFICIAL?si=UOLwjqUv-C1mWkn4">H2N OFFICIAL</a></p>
         </footer>
       </div>
+
       <script>
+        function toggleAction(action) {
+          fetch('/toggle-action', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action }),
+          }).then(res => res.json()).then(data => {
+            const button = document.getElementById(action);
+            button.innerText = \`\${action.charAt(0).toUpperCase() + action.slice(1)} (\${data.state ? 'ON' : 'OFF'})\`;
+          });
+        }
+
         function sendChatMessage(button) {
           fetch('/send-chat-message', {
             method: 'POST',
@@ -174,6 +247,7 @@ app.get('/', (req, res) => {
             body: JSON.stringify({ button }),
           });
         }
+
         function sendTeleportMessage() {
           const fromPerson = document.getElementById('fromPerson').value;
           const toPerson = document.getElementById('toPerson').value;
@@ -188,8 +262,6 @@ app.get('/', (req, res) => {
     </html>
   `);
 });
-
-app.use(express.json());
 
 app.post('/send-chat-message', (req, res) => {
   const { button } = req.body;
@@ -207,6 +279,28 @@ app.post('/send-tp-message', (req, res) => {
   res.sendStatus(200);
 });
 
+app.post('/toggle-action', (req, res) => {
+  const { action } = req.body;
+  if (actions.hasOwnProperty(action)) {
+    actions[action] = !actions[action];
+    controlBotActions();
+  }
+  res.json({ action, state: actions[action] });
+});
+
+function controlBotActions() {
+  if (global.bot) {
+    global.bot.setControlState('forward', actions.walkForward);
+    if (actions.circle) {
+      global.bot.setControlState('forward', true);
+      global.bot.setControlState('left', true);
+    } else {
+      global.bot.setControlState('left', false);
+    }
+    global.bot.setControlState('jump', actions.jump);
+  }
+}
+
 app.listen(3000);
 
 function createBot() {
@@ -220,8 +314,8 @@ function createBot() {
   });
 
   global.bot = bot;
-
   bot.loadPlugin(pathfinder);
+
   const mcData = require('minecraft-data')(bot.version);
   const defaultMove = new Movements(bot, mcData);
   bot.pathfinder.setMovements(defaultMove);
