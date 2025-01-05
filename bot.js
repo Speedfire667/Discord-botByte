@@ -105,8 +105,6 @@ app.get('/', (req, res) => {
         #sendButton {
           padding: 10px 20px;
           background: #1e90ff;
-          width: 100px;
-          height: 40px;
           color: white;
           border: none;
           border-radius: 5px;
@@ -116,32 +114,34 @@ app.get('/', (req, res) => {
         #sendButton:hover {
           background: #32a852;
         }
-        footer {
+        .actionControls {
           margin-top: 20px;
+          padding: 10px;
+          background-color: #f9f9f9;
+          border-radius: 10px;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-        footer a {
-          color: #1a73e8;
-          text-decoration: none;
-        }
-        footer a:hover {
-          text-decoration: underline;
+        .actionControls h3 {
+          margin-bottom: 10px;
+          color: #333;
         }
         .actionButton {
-          position: relative;
-          display: inline-block;
-          width: 60px;
-          height: 34px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin: 10px 0;
         }
-        .actionButton input {
-          display: none;
+        .actionButton label {
+          flex: 1;
+          text-align: left;
+          color: #555;
+          font-weight: bold;
         }
         .slider {
-          position: absolute;
+          position: relative;
           cursor: pointer;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
+          width: 60px;
+          height: 34px;
           background-color: #ccc;
           transition: .4s;
           border-radius: 34px;
@@ -162,6 +162,16 @@ app.get('/', (req, res) => {
         }
         input:checked + .slider:before {
           transform: translateX(26px);
+        }
+        footer {
+          margin-top: 20px;
+        }
+        footer a {
+          color: #1a73e8;
+          text-decoration: none;
+        }
+        footer a:hover {
+          text-decoration: underline;
         }
       </style>
     </head>
@@ -191,21 +201,6 @@ app.get('/', (req, res) => {
           </button>
         </div>
 
-        <div>
-          <label class="actionButton">
-            <input type="checkbox" id="walkForward" onclick="toggleAction('walkForward')">
-            <span class="slider"></span>
-          </label>
-          <label class="actionButton">
-            <input type="checkbox" id="circle" onclick="toggleAction('circle')">
-            <span class="slider"></span>
-          </label>
-          <label class="actionButton">
-            <input type="checkbox" id="jump" onclick="toggleAction('jump')">
-            <span class="slider"></span>
-          </label>
-        </div>
-
         <div class="selectors">
           <label for="fromPerson">Pessoa de Origem:</label>
           <select id="fromPerson">
@@ -223,6 +218,26 @@ app.get('/', (req, res) => {
           </select>
           <button id="sendButton" onclick="sendTeleportMessage()">Enviar</button>
         </div>
+
+        <div class="actionControls">
+          <h3>Controles de Ação</h3>
+          <div class="actionButton">
+            <label for="walkForward">Andar para Frente</label>
+            <input type="checkbox" id="walkForward" onclick="toggleAction('walkForward')">
+            <span class="slider"></span>
+          </div>
+          <div class="actionButton">
+            <label for="circle">Circular</label>
+            <input type="checkbox" id="circle" onclick="toggleAction('circle')">
+            <span class="slider"></span>
+          </div>
+          <div class="actionButton">
+            <label for="jump">Pular</label>
+            <input type="checkbox" id="jump" onclick="toggleAction('jump')">
+            <span class="slider"></span>
+          </div>
+        </div>
+
         <footer>
           <p>Créditos à: <a href="https://youtube.com/@H2N_OFFICIAL?si=UOLwjqUv-C1mWkn4">H2N OFFICIAL</a></p>
         </footer>
@@ -235,20 +250,11 @@ app.get('/', (req, res) => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action }),
           }).then(res => res.json()).then(data => {
-            const button = document.getElementById(action);
-            button.innerText = \`\${action.charAt(0).toUpperCase() + action.slice(1)} (\${data.state ? 'ON' : 'OFF'})\`;
+            console.log(data);
           });
         }
 
-        function sendChatMessage(button) {
-          fetch('/send-chat-message', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ button }),
-          });
-        }
-
-        function sendTeleportMessage() {
+function sendTeleportMessage() {
           const fromPerson = document.getElementById('fromPerson').value;
           const toPerson = document.getElementById('toPerson').value;
           fetch('/send-tp-message', {
@@ -318,6 +324,8 @@ function createBot() {
 
   const mcData = require('minecraft-data')(bot.version);
   const defaultMove = new Movements(bot, mcData);
+  defaultMove.canDig = false;  // Desabilita cavar para maior velocidade
+
   bot.pathfinder.setMovements(defaultMove);
 
   bot.once('spawn', () => {
