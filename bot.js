@@ -15,13 +15,12 @@ function createBot() {
 
     // Lista de mensagens para enviar no console
     const messages = [
-      "Estou explorando o mundo!",
-      "Correndo pelo quadrado 3x3!",
-      "Movimentos rápidos ativados.",
-      "Minecraft é divertido, até para bots!",
-      "Se eu fosse um jogador, seria um construtor!",
-      "Procurando por mobs... ou talvez diamantes.",
-      "Apenas um bot, mas sempre ativo no servidor!"
+      "Explorando o mundo!",
+      "Correndo em quadrado 3x3.",
+      "Sou apenas um bot se divertindo no servidor!",
+      "Minecraft é ótimo para bots também!",
+      "Procurando por aventuras automáticas...",
+      "Construir? Talvez depois, agora é hora de correr!",
     ];
 
     // Envia mensagens aleatórias no console a cada 5 segundos
@@ -32,25 +31,20 @@ function createBot() {
 
     // Função para movimentar o bot em um padrão de quadrado 3x3
     function moveSquare() {
-      // Ativa o modo de correr
-      bot.setControlState('sprint', true);
+      bot.setControlState('sprint', true); // Ativa o modo de correr
 
-      // Movimento em frente
       bot.setControlState('forward', true);
       setTimeout(() => {
         bot.setControlState('forward', false);
 
-        // Vira para a esquerda
         bot.setControlState('left', true);
         setTimeout(() => {
           bot.setControlState('left', false);
 
-          // Anda para trás
           bot.setControlState('back', true);
           setTimeout(() => {
             bot.setControlState('back', false);
 
-            // Vira para a direita
             bot.setControlState('right', true);
             setTimeout(() => {
               bot.setControlState('right', false);
@@ -71,9 +65,9 @@ function createBot() {
   });
 
   bot.on('end', () => {
-    console.log('Bot foi desconectado.');
+    console.log('Bot foi desconectado. Ele não tentará reconectar.');
   });
 }
 
-// Cria a primeira instância do bot
+// Cria a instância do bot
 createBot();
