@@ -18,7 +18,7 @@ const actions = {
 };
 
 const messages = {
-  button1: 'Mensagem do botão 1!',
+  button1: '/oa accept',
   button2: 'Mensagem do botão 2!',
   button3: 'Mensagem do botão 3!',
   button4: '/time set day',
