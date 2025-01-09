@@ -28,9 +28,11 @@ function createBot() {
 
   bot.on('error', (err) => {
     console.log('Erro no bot:', err.message);
-    if (err.code === 'ECONNREFUSED') {
+
+    // Verifica se o erro é relacionado a timeout de porta
+    if (err.message.includes('timeout scanning port') || err.code === 'ECONNREFUSED') {
       console.log('Servidor ainda não está disponível. Tentando reconectar...');
-      attemptReconnect(); // Tenta reconectar se o servidor não está disponível
+      attemptReconnect(); // Tenta reconectar
     }
   });
 
