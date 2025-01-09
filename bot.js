@@ -4,7 +4,7 @@ const bot = mineflayer.createBot({
   host: 'BYTEserver.aternos.me',  // Endereço do servidor
   port: 12444,                    // Porta do servidor
   username: 'BotName',            // Nome do bot (não precisa ser uma conta real)
-  version: false,                 // Detecta a versão automaticamente
+  version: 1.14,                 // Detecta a versão automaticamente
   auth: 'mojang',                 // Usado para contas premium, mas não necessário aqui
   offline: true                   // Indica que o bot deve se conectar de forma offline
 });
