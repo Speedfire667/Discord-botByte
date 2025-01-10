@@ -32,7 +32,7 @@
     "chat-messages": {
       "enabled": true,
       "repeat": true,
-      "repeat-delay": 1800,
+      "repeat-delay": 900,
 
       "messages": [
         "Alguém tem pizza 🍕 ae?",
@@ -44,6 +44,6 @@
 
     "chat-log": true,
     "auto-reconnect": true,
-    "auto-recconect-delay": 5000
+    "auto-recconect-delay": 1800
   }
 }
