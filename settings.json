@@ -1,12 +1,12 @@
 {
   "bot-account": {
-    "username": "Bot",
+    "username": "botBYTE",
     "password": "",
     "type": "mojang"
   },
 
   "server": {
-    "ip": "BYTEServer.aternos.me",
+    "ip": "BYTEserver.aternos.me",
     "port": 12444,
     "version": "1.14"
   },
@@ -32,13 +32,13 @@
     "chat-messages": {
       "enabled": true,
       "repeat": true,
-      "repeat-delay": 2,
+      "repeat-delay": 1800,
 
       "messages": [
-        "I'm a regular player ",
-        "My owner is urFate_ ",
-        "I want be alone ",
-        "Visit my Youtube page! (https://youtube.com/@H2N_OFFICIAL)"
+        "Alguém tem pizza 🍕 ae?",
+        "Por que o Mateus me criou sendo que ele nem entra no mapa",
+        "Será se eu estou vivo?",
+        "fala ae rapaziada se o Mateus nao pode brincar ai embaixo eu estou livre blz?"
       ]
     },
 
