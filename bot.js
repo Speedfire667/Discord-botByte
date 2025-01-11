@@ -1,128 +1,99 @@
 const mineflayer = require('mineflayer');
 const Movements = require('mineflayer-pathfinder').Movements;
 const pathfinder = require('mineflayer-pathfinder').pathfinder;
-const { GoalBlock } = require('mineflayer-pathfinder').goals;
-
 const config = require('./settings.json');
 const express = require('express');
 
 const app = express();
 
 app.get('/', (req, res) => {
-  res.send('Bot is arrived')
+  res.send('Bot is running');
 });
 
 app.listen(8000, () => {
-  console.log('server started');
+  console.log('Server started');
 });
 
 function createBot() {
-   const bot = mineflayer.createBot({
-      username: config['bot-account']['username'],
-      password: config['bot-account']['password'],
-      auth: config['bot-account']['type'],
-      host: config.server.ip,
-      port: config.server.port,
-      version: config.server.version,
-   });
+  const bot = mineflayer.createBot({
+    username: config['bot-account']['username'],
+    password: config['bot-account']['password'],
+    auth: config['bot-account']['type'],
+    host: config.server.ip,
+    port: config.server.port,
+    version: config.server.version,
+  });
 
-   bot.loadPlugin(pathfinder);
-   const mcData = require('minecraft-data')(bot.version);
-   const defaultMove = new Movements(bot, mcData);
-   bot.settings.colorsEnabled = false;
+  bot.loadPlugin(pathfinder);
+  const mcData = require('minecraft-data')(bot.version);
 
-   bot.once('spawn', () => {
-      console.log('\x1b[33m[AfkBot] Bot joined to the server', '\x1b[0m');
+  bot.once('spawn', () => {
+    console.log('\x1b[33m[AfkBot] Bot joined the server', '\x1b[0m');
 
-      if (config.utils['auto-auth'].enabled) {
-         console.log('[INFO] Started auto-auth module');
-
-         var password = config.utils['auto-auth'].password;
-         setTimeout(() => {
-            bot.chat(`/register ${password} ${password}`);
-            bot.chat(`/login ${password}`);
-         }, 500);
-
-         console.log(`[Auth] Authentification commands executed.`);
-      }
-
-      if (config.utils['chat-messages'].enabled) {
-         console.log('[INFO] Started chat-messages module');
-         var messages = config.utils['chat-messages']['messages'];
-
-         if (config.utils['chat-messages'].repeat) {
-            var delay = config.utils['chat-messages']['repeat-delay'];
-            let i = 0;
-
-            let msg_timer = setInterval(() => {
-               bot.chat(`${messages[i]}`);
-
-               if (i + 1 == messages.length) {
-                  i = 0;
-               } else i++;
-            }, delay * 1000);
-         } else {
-            messages.forEach((msg) => {
-               bot.chat(msg);
-            });
-         }
-      }
-
-      const pos = config.position;
-
-      if (config.position.enabled) {
-         console.log(
-            `\x1b[32m[Afk Bot] Starting moving to target location (${pos.x}, ${pos.y}, ${pos.z})\x1b[0m`
-         );
-         bot.pathfinder.setMovements(defaultMove);
-         bot.pathfinder.setGoal(new GoalBlock(pos.x, pos.y, pos.z));
-      }
-
-      if (config.utils['anti-afk'].enabled) {
-         bot.setControlState('jump', true);
-         if (config.utils['anti-afk'].sneak) {
-            bot.setControlState('sneak', true);
-         }
-      }
-   });
-
-   bot.on('chat', (username, message) => {
-      if (config.utils['chat-log']) {
-         console.log(`[ChatLog] <${username}> ${message}`);
-      }
-   });
-
-   bot.on('goal_reached', () => {
-      console.log(
-         `\x1b[32m[AfkBot] Bot arrived to target location. ${bot.entity.position}\x1b[0m`
+    // Configuração anti-AFK
+    if (config.utils['anti-afk'].enabled) {
+      console.log('\x1b[32m[INFO] Starting anti-AFK movement\x1b[0m');
+      antiAfkMovement(
+        bot,
+        config.utils['anti-afk']['square-size'],
+        config.utils['anti-afk']['sneak'],
+        config.utils['anti-afk']['chat'],
+        config.utils['anti-afk']['delay']
       );
-   });
+    }
+  });
 
-   bot.on('death', () => {
-      console.log(
-         `\x1b[33m[AfkBot] Bot has been died and was respawned ${bot.entity.position}`,
-         '\x1b[0m'
-      );
-   });
+  bot.on('chat', (username, message) => {
+    if (config.utils['chat-log']) {
+      console.log(`[ChatLog] <${username}> ${message}`);
+    }
+  });
 
-   if (config.utils['auto-reconnect']) {
-      bot.on('end', () => {
-         setTimeout(() => {
-            createBot();
-         }, config.utils['auto-recconect-delay']);
-      });
-   }
+  bot.on('error', (err) =>
+    console.log(`\x1b[31m[ERROR] ${err.message}`, '\x1b[0m')
+  );
 
-   bot.on('kicked', (reason) =>
-      console.log(
-         '\x1b[33m',
-         `[AfkBot] Bot was kicked from the server. Reason: \n${reason}`,
-         '\x1b[0m'
-      )
-   );
-   bot.on('error', (err) =>
-      console.log(`\x1b[31m[ERROR] ${err.message}`, '\x1b[0m')
-   );
+  bot.on('end', () => {
+    if (config.utils['auto-reconnect']) {
+      console.log('\x1b[33m[INFO] Reconnecting...\x1b[0m');
+      setTimeout(createBot, config.utils['auto-recconect-delay']);
+    }
+  });
+}
+
+// Função para o bot andar em um quadrado com configurações de sneak e chat
+function antiAfkMovement(bot, size, sneak, chatConfig, delay) {
+  const startPosition = bot.entity.position.clone();
+  const path = [
+    { x: size, z: 0 }, // Para frente
+    { x: 0, z: size }, // Para a direita
+    { x: -size, z: 0 }, // Para trás
+    { x: 0, z: -size }, // Para a esquerda
+  ];
+
+  let step = 0;
+
+  setInterval(() => {
+    const move = path[step];
+    const targetPosition = startPosition.offset(move.x, 0, move.z);
+    bot.pathfinder.setMovements(new Movements(bot, require('minecraft-data')(bot.version)));
+    bot.pathfinder.setGoal(new pathfinder.goals.GoalBlock(targetPosition.x, targetPosition.y, targetPosition.z));
+    console.log(`\x1b[33m[INFO] Moving to ${targetPosition.x}, ${targetPosition.y}, ${targetPosition.z}\x1b[0m`);
+
+    // Ativar ou desativar sneak
+    if (sneak) {
+      bot.setControlState('sneak', true);
+    }
+
+    // Enviar mensagem no chat (se habilitado)
+    if (chatConfig.enabled) {
+      bot.chat(chatConfig.message);
+      console.log(`\x1b[32m[INFO] Sent chat message: "${chatConfig.message}"\x1b[0m`);
+    }
+
+    // Próximo passo no quadrado
+    step = (step + 1) % path.length;
+  }, delay * 1000); // Tempo de espera entre movimentos
 }
 
 createBot();
