@@ -6,9 +6,9 @@
   },
 
   "server": {
-    "ip": "BYTEserver.aternos.me",
+    "ip": "BYTEServer.aternos.me",
     "port": 12444,
-    "version": "1.14"
+    "version": "1.12.1"
   },
 
   "position": {
@@ -26,7 +26,13 @@
 
     "anti-afk": {
       "enabled": true,
-      "sneak": true
+      "square-size": 3,
+      "sneak": true,
+      "chat": {
+        "enabled": true,
+        "message": "I'm moving to avoid AFK!"
+      },
+      "delay": 5
     },
 
     "chat-messages": {
@@ -44,6 +50,6 @@
 
     "chat-log": true,
     "auto-reconnect": true,
-    "auto-recconect-delay": 1800
+    "auto-recconect-delay": 5000
   }
 }
